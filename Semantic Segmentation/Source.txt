@@ -1,0 +1,9 @@
+1. ENET: https://stackoverflow.com/questions/57685689/enet-sementic-segmentation-model-is-not-working-for-smaller-images
+
+2. DeepLabV3+: https://github.com/breadbread1984/DeeplabV3-tf2.0 
+
+3. Adapnet: https://github.com/GeorgeSeif/Semantic-Segmentation-Suite/blob/master/models/AdapNet.py
+
+4. PSPNET: https://github.com/GeorgeSeif/Semantic-Segmentation-Suite/blob/master/models/PSPNet.py
+
+5. FCN: https://fairyonice.github.io/Learn-about-Fully-Convolutional-Networks-for-semantic-segmentation.html
