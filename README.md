@@ -1,7 +1,7 @@
 # ML_Basic #
 ## Files and their content ##
 1. [ROC_curve.py](https://github.com/awal-ahmed/ML_Basic/blob/main/ROC_curve.py): Create ROC curve for multi-class classifier
-2. [classification_models.py](https://github.com/awal-ahmed/Machine-Learning-Basic/blob/main/classification_models.py): Predict with different classification models and generate differet testing matrix:
+2. [Classification_models.py](https://github.com/awal-ahmed/Machine-Learning-Basic/blob/main/Classification_models.py): Predict with different classification models and generate differet testing matrix:
    * BaggingClassifier
    * DecisionTreeClassifier
    * GaussianNaiveBayes
