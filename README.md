@@ -1,13 +1,13 @@
 # ML_Basic #
 ## Folders and their content ##
 1. [Semantic Segmentation](https://github.com/awal-ahmed/Machine-Learning-Basic/tree/main/Semantic%20Segmentation): Contains 7differnt semantic segmentation models:
-    * [Adapnet.py](https://github.com/awal-ahmed/Machine-Learning-Basic/blob/main/Semantic%20Segmentation/Adapnet.py)
-    * [DeepLabv3+.py](https://github.com/awal-ahmed/Machine-Learning-Basic/blob/main/Semantic%20Segmentation/DeepLabv3%2B.py)
-    * [ENET.py](https://github.com/awal-ahmed/Machine-Learning-Basic/blob/main/Semantic%20Segmentation/ENET.py)
-    * [FCN.py](https://github.com/awal-ahmed/Machine-Learning-Basic/blob/main/Semantic%20Segmentation/FCN.py)
-    * [PSPNET.py](https://github.com/awal-ahmed/Machine-Learning-Basic/blob/main/Semantic%20Segmentation/PSPNET.py)
-    * [SegNet.py](https://github.com/awal-ahmed/Machine-Learning-Basic/blob/main/Semantic%20Segmentation/segnet%20another.py)
-    * [UNet.py](https://github.com/awal-ahmed/Machine-Learning-Basic/blob/main/Semantic%20Segmentation/unet.py)
+    * [Adapnet](https://github.com/awal-ahmed/Machine-Learning-Basic/blob/main/Semantic%20Segmentation/Adapnet.py)
+    * [DeepLabv3+](https://github.com/awal-ahmed/Machine-Learning-Basic/blob/main/Semantic%20Segmentation/DeepLabv3%2B.py)
+    * [ENET](https://github.com/awal-ahmed/Machine-Learning-Basic/blob/main/Semantic%20Segmentation/ENET.py)
+    * [FCN](https://github.com/awal-ahmed/Machine-Learning-Basic/blob/main/Semantic%20Segmentation/FCN.py)
+    * [PSPNET](https://github.com/awal-ahmed/Machine-Learning-Basic/blob/main/Semantic%20Segmentation/PSPNET.py)
+    * [SegNet](https://github.com/awal-ahmed/Machine-Learning-Basic/blob/main/Semantic%20Segmentation/SegNet.py)
+    * [UNet](https://github.com/awal-ahmed/Machine-Learning-Basic/blob/main/Semantic%20Segmentation/Unet.py)
 
 [All_model_run.py](https://github.com/awal-ahmed/Machine-Learning-Basic/blob/main/Semantic%20Segmentation/All_model_run.py): A general code to run all segmentation models. Just replace the model section with any of those code, then this code is ready to go.
 ## Files and their content ##
