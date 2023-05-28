@@ -11,7 +11,7 @@
 
 [All_model_run.py](https://github.com/awal-ahmed/Machine-Learning-Basic/blob/main/Semantic%20Segmentation/All_model_run.py): A general code to run all segmentation models. Just replace the model section with any of those code, then this code is ready to go.
 ## Files and their content ##
-1. [ROC_curve.py](https://github.com/awal-ahmed/ML_Basic/blob/main/ROC_curve.py): Create ROC curve for multi-class classifier
+1. [Add_weight_with_cnn.py](https://github.com/awal-ahmed/Machine-Learning-Basic/blob/main/Add_weight_with_cnn.py): Add custome weight with model to adjust class imbalance in CNN models.
 2. [Classification_models.py](https://github.com/awal-ahmed/Machine-Learning-Basic/blob/main/Classification_models.py): Predict with different classification models and generate differet testing matrix:
    * BaggingClassifier
    * DecisionTreeClassifier
@@ -22,7 +22,10 @@
    * SVC
    * VotingClassifier
    * ANN
-3. [Add_weight_with_cnn.py](https://github.com/awal-ahmed/Machine-Learning-Basic/blob/main/Add_weight_with_cnn.py): Add custome weight with model to adjust class imbalance in CNN models
+3. [Coefficient_and_loss.py](https://github.com/awal-ahmed/Machine-Learning-Basic/blob/main/Coefficient_and_loss.py): Add following custom coefficient and loss functions and the way to use those with CNN model:
+   * Dice Coefficient
+   * Jaccard index
+4. [ROC_curve.py](https://github.com/awal-ahmed/ML_Basic/blob/main/ROC_curve.py): Create ROC curve for multi-class classifier.
 
 
 ** Required command to update github **
