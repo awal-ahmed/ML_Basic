@@ -166,7 +166,7 @@ net = ConvBlock(net, n_filters=6, kernel_size=[1, 1])
 net = Upsampling(net, scale=8)
 
 
-net = tf.keras.layers.conv2d(net, NUM_CLASSES, [1, 1], activation_fn='sigmoid', scope='logits')
+net = tf.keras.layers.conv2d(net, NUM_CLASSES, [1, 1], activation_fn='softmax', scope='logits')
 
 
 

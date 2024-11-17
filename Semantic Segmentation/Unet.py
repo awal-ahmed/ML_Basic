@@ -76,7 +76,7 @@ c9 = tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='h
 c9 = tf.keras.layers.Dropout(.1)(c9) 
 c9 = tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c9)
 
-outputs = tf.keras.layers.Conv2D(NUM_CLASSES,(1,1), activation='sigmoid')(c9)
+outputs = tf.keras.layers.Conv2D(NUM_CLASSES,(1,1), activation='softmax')(c9)
 
 
 model = tf.keras.Model(inputs=[inputs], outputs=[outputs])

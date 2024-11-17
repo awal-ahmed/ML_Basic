@@ -99,6 +99,6 @@ def build_pspnet(inputs, label_size, num_classes, preset_model='PSPNet', fronten
     elif upscaling_method.lower() == "bilinear":
         net = Upsampling(net, label_size)
     
-    net = slim.conv2d(net, num_classes, [1, 1], activation_fn=None, scope='logits')
+    net = slim.conv2d(net, num_classes, [1, 1], activation_fn='softmax', scope='logits')
 
     return net, init_fn
