@@ -1,104 +1,103 @@
 # Copy code from All_model_run.py and replace model part with this code.
 
-
-
-import tensorflow as tf
-from tensorflow.contrib import slim
 import numpy as np
-from builders import frontend_builder
+import time
+import os
+import matplotlib.pyplot as plt
+import cv2
+import tensorflow as tf
+from tensorflow import keras
+import tensorflow.keras.backend as K
+from tensorflow.keras.layers import Convolution2D, BatchNormalization, ReLU, LeakyReLU, Add, Activation
+from tensorflow.keras.layers import GlobalAveragePooling2D, AveragePooling2D, UpSampling2D
 
 
 IMAGE_HEIGHT = 256
 IMAGE_WIDTH = 256
 NUM_CLASSES = 9
 
+def convolutional_block(input_tensor, filters, block_identifier):
+    # Dilated convolution block
+    block_name = 'block_' + str(block_identifier) + '_'
+    filter1, filter2, filter3 = filters
+    skip_connection = input_tensor
 
-def Upsampling(inputs,feature_map_shape):
-    return tf.image.resize_bilinear(inputs, size=feature_map_shape)
+    # Block A
+    input_tensor = Convolution2D(filters=filter1, kernel_size=(1, 1), dilation_rate=(1, 1),
+                      padding='same', kernel_initializer='he_normal', name=block_name + 'a')(input_tensor)
+    input_tensor = BatchNormalization(name=block_name + 'batch_norm_a')(input_tensor)
+    input_tensor = LeakyReLU(alpha=0.2, name=block_name + 'leakyrelu_a')(input_tensor)
 
-def ConvUpscaleBlock(inputs, n_filters, kernel_size=[3, 3], scale=2):
-    """
-    Basic conv transpose block for Encoder-Decoder upsampling
-    Apply successivly Transposed Convolution, BatchNormalization, ReLU nonlinearity
-    """
-    net = tf.nn.relu(slim.batch_norm(inputs, fused=True))
-    net = slim.conv2d_transpose(net, n_filters, kernel_size=[3, 3], stride=[scale, scale], activation_fn=None)
-    return net
+    # Block B
+    input_tensor = Convolution2D(filters=filter2, kernel_size=(3, 3), dilation_rate=(2, 2),
+                      padding='same', kernel_initializer='he_normal', name=block_name + 'b')(input_tensor)
+    input_tensor = BatchNormalization(name=block_name + 'batch_norm_b')(input_tensor)
+    input_tensor = LeakyReLU(alpha=0.2, name=block_name + 'leakyrelu_b')(input_tensor)
 
-def ConvBlock(inputs, n_filters, kernel_size=[3, 3]):
-    """
-    Basic conv block for Encoder-Decoder
-    Apply successivly Convolution, BatchNormalization, ReLU nonlinearity
-    """
-    net = tf.nn.relu(slim.batch_norm(inputs, fused=True))
-    net = slim.conv2d(net, n_filters, kernel_size, activation_fn=None, normalizer_fn=None)
-    return net
+    # Block C
+    input_tensor = Convolution2D(filters=filter3, kernel_size=(1, 1), dilation_rate=(1, 1),
+                      padding='same', kernel_initializer='he_normal', name=block_name + 'c')(input_tensor)
+    input_tensor = BatchNormalization(name=block_name + 'batch_norm_c')(input_tensor)
 
-def InterpBlock(net, level, feature_map_shape, pooling_type):
-    
-    # Compute the kernel and stride sizes according to how large the final feature map will be
-    # When the kernel size and strides are equal, then we can compute the final feature map size
-    # by simply dividing the current size by the kernel or stride size
-    # The final feature map sizes are 1x1, 2x2, 3x3, and 6x6. We round to the closest integer
-    kernel_size = [int(np.round(float(feature_map_shape[0]) / float(level))), int(np.round(float(feature_map_shape[1]) / float(level)))]
-    stride_size = kernel_size
+    # Skip convolutional block for residual
+    skip_connection = Convolution2D(filters=filter3, kernel_size=(3, 3), padding='same', name=block_name + 'skip_conv')(skip_connection)
+    skip_connection = BatchNormalization(name=block_name + 'batch_norm_skip_conv')(skip_connection)
 
-    net = slim.pool(net, kernel_size, stride=stride_size, pooling_type='MAX')
-    net = slim.conv2d(net, 512, [1, 1], activation_fn=None)
-    net = slim.batch_norm(net, fused=True)
-    net = tf.nn.relu(net)
-    net = Upsampling(net, feature_map_shape)
-    return net
+    # Block C + Skip Convolution
+    input_tensor = Add(name=block_name + 'add')([input_tensor, skip_connection])
+    input_tensor = ReLU(name=block_name + 'relu')(input_tensor)
+    return input_tensor
 
-def PyramidPoolingModule(inputs, feature_map_shape, pooling_type):
-    """
-    Build the Pyramid Pooling Module.
-    """
+def base_convolutional_block(input_layer):
+    # Base convolutional block to obtain input image feature maps
 
-    interp_block1 = InterpBlock(inputs, 1, feature_map_shape, pooling_type)
-    interp_block2 = InterpBlock(inputs, 2, feature_map_shape, pooling_type)
-    interp_block3 = InterpBlock(inputs, 3, feature_map_shape, pooling_type)
-    interp_block6 = InterpBlock(inputs, 6, feature_map_shape, pooling_type)
+    # Base Block 1
+    base_result = convolutional_block(input_layer, [32, 32, 64], '1')
 
-    res = tf.concat([inputs, interp_block6, interp_block3, interp_block2, interp_block1], axis=-1)
-    return res
+    # Base Block 2
+    base_result = convolutional_block(base_result, [64, 64, 128], '2')
 
+    # Base Block 3
+    base_result = convolutional_block(base_result, [128, 128, 256], '3')
 
+    return base_result
 
-def build_pspnet(inputs, label_size, num_classes, preset_model='PSPNet', frontend="ResNet101", pooling_type = "MAX",
-    weight_decay=1e-5, upscaling_method="conv", is_training=True, pretrained_dir="models"):
-    """
-    Builds the PSPNet model. 
-    Arguments:
-      inputs: The input tensor
-      label_size: Size of the final label tensor. We need to know this for proper upscaling 
-      preset_model: Which model you want to use. Select which ResNet model to use for feature extraction 
-      num_classes: Number of classes
-      pooling_type: Max or Average pooling
-    Returns:
-      PSPNet model
-    """
+def pyramid_pooling_module(input_layer):
+    # Pyramid pooling module
+    base_result = base_convolutional_block(input_layer)
 
-    logits, end_points, frontend_scope, init_fn  = frontend_builder.build_frontend(inputs, frontend, pretrained_dir=pretrained_dir, is_training=is_training)
+    # Red Pixel Pooling
+    red_result = GlobalAveragePooling2D(name='red_pool')(base_result)
+    red_result = tf.keras.layers.Reshape((1, 1, 256))(red_result)
+    red_result = Convolution2D(filters=64, kernel_size=(1, 1), name='red_1_by_1')(red_result)
+    red_result = UpSampling2D(size=256, interpolation='bilinear', name='red_upsampling')(red_result)
 
-    feature_map_shape = [int(x / 8.0) for x in label_size]
-    print(feature_map_shape)
-    psp = PyramidPoolingModule(end_points['pool3'], feature_map_shape=feature_map_shape, pooling_type=pooling_type)
+    # Yellow Pixel Pooling
+    yellow_result = AveragePooling2D(pool_size=(2, 2), name='yellow_pool')(base_result)
+    yellow_result = Convolution2D(filters=64, kernel_size=(1, 1), name='yellow_1_by_1')(yellow_result)
+    yellow_result = UpSampling2D(size=2, interpolation='bilinear', name='yellow_upsampling')(yellow_result)
 
-    net = slim.conv2d(psp, 512, [3, 3], activation_fn=None)
-    net = slim.batch_norm(net, fused=True)
-    net = tf.nn.relu(net)
+    # Blue Pixel Pooling
+    blue_result = AveragePooling2D(pool_size=(4, 4), name='blue_pool')(base_result)
+    blue_result = Convolution2D(filters=64, kernel_size=(1, 1), name='blue_1_by_1')(blue_result)
+    blue_result = UpSampling2D(size=4, interpolation='bilinear', name='blue_upsampling')(blue_result)
 
-    if upscaling_method.lower() == "conv":
-        net = ConvUpscaleBlock(net, 256, kernel_size=[3, 3], scale=2)
-        net = ConvBlock(net, 256)
-        net = ConvUpscaleBlock(net, 128, kernel_size=[3, 3], scale=2)
-        net = ConvBlock(net, 128)
-        net = ConvUpscaleBlock(net, 64, kernel_size=[3, 3], scale=2)
-        net = ConvBlock(net, 64)
-    elif upscaling_method.lower() == "bilinear":
-        net = Upsampling(net, label_size)
-    
-    net = slim.conv2d(net, num_classes, [1, 1], activation_fn='softmax', scope='logits')
+    # Green Pixel Pooling
+    green_result = AveragePooling2D(pool_size=(8, 8), name='green_pool')(base_result)
+    green_result = Convolution2D(filters=64, kernel_size=(1, 1), name='green_1_by_1')(green_result)
+    green_result = UpSampling2D(size=8, interpolation='bilinear', name='green_upsampling')(green_result)
 
-    return net, init_fn
+    # Final Pyramid Pooling
+    return tf.keras.layers.concatenate([base_result, red_result, yellow_result, blue_result, green_result])
+
+def pyramid_based_conv(input_layer):
+    result = pyramid_pooling_module(input_layer)
+    result = Convolution2D(filters=num_classes, kernel_size=3, padding='same', name='last_conv_3_by_3')(result)
+    result = BatchNormalization(name='last_conv_3_by_3_batch_norm')(result)
+    result = Activation('sigmoid', name='last_conv_relu')(result)
+    # result = tf.keras.layers.Flatten(name='last_conv_flatten')(result)
+    return result
+
+input_layer = tf.keras.Input(shape=((IMAGE_WIDTH, IMAGE_HEIGHT, 3)), name='input')
+output_layer = pyramid_based_conv(input_layer)
+model = Model(input_layer, output_layer)
